@@ -9,7 +9,14 @@ import time
 import os
 from dotenv import load_dotenv
 
-load_dotenv(override=True)  # .env always wins over any other env source
+load_dotenv(override=True)  # local .env for development
+
+def get_secret(key: str, default=None):
+    """Read from st.secrets (Streamlit Cloud) or .env (local)."""
+    try:
+        return st.secrets[key]
+    except (KeyError, FileNotFoundError):
+        return os.getenv(key, default)
 
 st.set_page_config(
     page_title="Rwanda LFS Dashboard",
@@ -69,13 +76,13 @@ def onedrive_to_download_url(url: str) -> str:
     # Short OneDrive links (1drv.ms) — follow redirect then append download param
     return url
 
-REFRESH_MINUTES = int(os.getenv("REFRESH_MINUTES", 15))
+REFRESH_MINUTES = int(get_secret("REFRESH_MINUTES", 15))
 
 @st.cache_data(ttl=60 * REFRESH_MINUTES, show_spinner="Refreshing survey data…")
 def load_data() -> pd.DataFrame:
-    raw_url = os.getenv("DATA_URL", "")
+    raw_url = get_secret("DATA_URL", "")
     if not raw_url:
-        raise ValueError("DATA_URL is not set in your .env file.")
+        raise ValueError("DATA_URL is not set.")
     url = onedrive_to_download_url(raw_url)
 
     resp = requests.get(url, timeout=30)
@@ -110,7 +117,7 @@ with st.sidebar:
         st.caption(f"Last loaded: {last_refresh}")
     except Exception as e:
         st.error(f"Could not load data: {e}")
-        st.info("Check that DATA_URL is set correctly in your `.env` file.")
+        st.info("Set DATA_URL in Streamlit Cloud Secrets (deployed) or in your local `.env` file.")
         st.stop()
 
     st.divider()
