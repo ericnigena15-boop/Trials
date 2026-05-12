@@ -42,23 +42,48 @@ CHART_LAYOUT = dict(
 
 st.markdown(f"""
 <style>
-  body, .main {{ background:{LIGHT_BG}; }}
+  /* ── Global background ── */
+  body, .main, .block-container, [data-testid="stAppViewContainer"] {{
+    background: {LIGHT_BG} !important;
+  }}
+  [data-testid="stSidebar"] {{ background: #ffffff !important; }}
+
+  /* ── KPI cards ── */
   .card {{
-    background:white; border-radius:12px; padding:18px 20px 14px;
-    box-shadow:0 1px 6px rgba(0,0,0,0.07); border-top:4px solid {BLUE};
+    background: white; border-radius: 12px; padding: 18px 20px 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 4px solid {BLUE};
   }}
-  .card-green  {{ border-top-color:{GREEN}; }}
-  .card-yellow {{ border-top-color:{YELLOW}; }}
-  .card-red    {{ border-top-color:#e74c3c; }}
-  .kpi-val {{ font-size:2.1rem; font-weight:800; color:{DARK}; line-height:1.1; }}
-  .kpi-lbl {{ font-size:0.78rem; color:{GREY}; text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; }}
-  .kpi-sub {{ font-size:0.78rem; color:{GREY}; margin-top:3px; }}
+  .card-green  {{ border-top-color: {GREEN}; }}
+  .card-yellow {{ border-top-color: {YELLOW}; }}
+  .card-red    {{ border-top-color: #e74c3c; }}
+  .kpi-val {{ font-size: 2.1rem; font-weight: 800; color: {DARK}; line-height: 1.1; }}
+  .kpi-lbl {{ font-size: 0.78rem; color: {GREY}; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }}
+  .kpi-sub {{ font-size: 0.78rem; color: {GREY}; margin-top: 3px; }}
+
+  /* ── Chart containers — same card style as KPIs ── */
+  [data-testid="stPlotlyChart"] {{
+    background: white !important;
+    border-radius: 12px !important;
+    padding: 10px 12px 6px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+    border-top: 4px solid {BLUE} !important;
+  }}
+
+  /* ── Section headers ── */
   .sec-hdr {{
-    font-size:0.9rem; font-weight:700; color:{DARK};
-    text-transform:uppercase; letter-spacing:.06em;
-    border-left:3px solid {BLUE}; padding-left:8px; margin:22px 0 10px;
+    font-size: 0.9rem; font-weight: 700; color: {DARK};
+    text-transform: uppercase; letter-spacing: .06em;
+    border-left: 3px solid {BLUE}; padding-left: 8px; margin: 24px 0 10px;
   }}
-  hr.div {{ border:none; border-top:1px solid #e2e8f0; margin:6px 0 14px; }}
+  hr.div {{ border: none; border-top: 1px solid #e2e8f0; margin: 6px 0 14px; }}
+
+  /* ── Expander ── */
+  [data-testid="stExpander"] {{
+    background: white !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
+    border: none !important;
+  }}
 </style>
 """, unsafe_allow_html=True)
 
