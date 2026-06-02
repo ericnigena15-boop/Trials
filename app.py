@@ -7,7 +7,9 @@ import requests
 import io
 import time
 import os
+import json as _json
 from dotenv import load_dotenv
+from streamlit.components.v1 import html as _inject_js
 
 load_dotenv(override=True)  # local .env for development
 
@@ -39,6 +41,34 @@ CHART_LAYOUT = dict(
     margin=dict(t=34, b=10, l=10, r=10),
     font=dict(family="sans-serif", size=12),
 )
+
+def grow_chart(fig, duration=900):
+    """Grow bars/pies from zero on load. JS at page bottom triggers the frame."""
+    snapshot = _json.loads(fig.to_json()).get("data", [])
+    animated = False
+    for trace in fig.data:
+        if isinstance(trace, go.Bar):
+            animated = True
+            if trace.orientation == "h":
+                trace.x = [0] * (len(trace.x) if trace.x is not None else 0)
+            else:
+                trace.y = [0] * (len(trace.y) if trace.y is not None else 0)
+        elif isinstance(trace, go.Pie):
+            animated = True
+            trace.values = [0.001] * (len(trace.values) if trace.values is not None else 0)
+    if animated:
+        fig.frames = [go.Frame(data=snapshot, name="loaded")]
+        fig.update_layout(updatemenus=[dict(
+            type="buttons", showactive=False, visible=False,
+            buttons=[dict(label="▶", method="animate",
+                args=[["loaded"], {
+                    "frame": {"duration": duration, "redraw": True},
+                    "transition": {"duration": int(duration * 0.88), "easing": "cubic-in-out"},
+                    "fromcurrent": False
+                }]
+            )]
+        )])
+    return fig
 
 st.markdown(f"""
 <style>
@@ -293,6 +323,7 @@ with col_prog:
         xaxis=dict(showgrid=False),
         legend=dict(orientation="h", y=1.1), bargap=0.25,
     )
+    fig = grow_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 with col_prov:
@@ -306,6 +337,7 @@ with col_prov:
     fig2.update_layout(**CHART_LAYOUT, height=320, showlegend=False,
                        yaxis=dict(categoryorder="total ascending"))
     fig2.update_traces(textposition="outside")
+    fig2 = grow_chart(fig2)
     st.plotly_chart(fig2, use_container_width=True)
 
 # ── Section 2 : Demographics ──────────────────────────────────────────────────
@@ -321,6 +353,7 @@ with d1:
     fig.update_layout(**CHART_LAYOUT, height=300,
                       legend=dict(orientation="h", y=-0.05))
     fig.update_traces(textinfo="percent+label", textposition="outside")
+    fig = grow_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 with d2:
@@ -335,6 +368,7 @@ with d2:
     fig.update_layout(**CHART_LAYOUT, height=300,
                       xaxis=dict(showgrid=False), yaxis=dict(gridcolor="#f0f0f0"),
                       legend=dict(orientation="h", y=1.1))
+    fig = grow_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 with d3:
@@ -346,6 +380,7 @@ with d3:
     fig.update_layout(**CHART_LAYOUT, height=300, showlegend=False,
                       yaxis=dict(categoryorder="total ascending"),
                       xaxis=dict(gridcolor="#f0f0f0"))
+    fig = grow_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 # ── Section 3 : Employment overview ──────────────────────────────────────────
@@ -362,6 +397,7 @@ with e1:
     fig.update_layout(**CHART_LAYOUT, height=300,
                       legend=dict(orientation="h", y=-0.05))
     fig.update_traces(textinfo="percent+label", textposition="outside")
+    fig = grow_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 with e2:
@@ -373,6 +409,7 @@ with e2:
     fig.update_layout(**CHART_LAYOUT, height=300, showlegend=False,
                       yaxis=dict(categoryorder="total ascending"),
                       xaxis=dict(gridcolor="#f0f0f0"))
+    fig = grow_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 with e3:
@@ -384,6 +421,7 @@ with e3:
     fig.update_layout(**CHART_LAYOUT, height=300,
                       legend=dict(orientation="h", y=-0.05))
     fig.update_traces(textinfo="percent+label", textposition="outside")
+    fig = grow_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 # ── Section 4 : Labour market quality ────────────────────────────────────────
@@ -431,6 +469,7 @@ with l3:
         yaxis=dict(gridcolor="#f0f0f0", title="Respondents"),
         legend=dict(orientation="h", y=1.1),
     )
+    fig = grow_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 # ── Section 5 : Education & Social Protection ─────────────────────────────────
@@ -448,6 +487,7 @@ with s1:
     fig.update_layout(**CHART_LAYOUT, height=300,
                       xaxis=dict(showgrid=False, tickangle=-30),
                       yaxis=dict(gridcolor="#f0f0f0"))
+    fig = grow_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 with s2:
@@ -459,6 +499,7 @@ with s2:
     fig.update_layout(**CHART_LAYOUT, height=300,
                       legend=dict(orientation="h", y=-0.05))
     fig.update_traces(textinfo="percent+label", textposition="outside")
+    fig = grow_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 with s3:
@@ -478,6 +519,7 @@ with s3:
         yaxis=dict(gridcolor="#f0f0f0", title="Respondents"),
         legend=dict(orientation="h", y=1.1),
     )
+    fig = grow_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 # ── Section 6 : Inactivity & Unemployment ────────────────────────────────────
@@ -494,6 +536,7 @@ with u1:
     fig.update_layout(**CHART_LAYOUT, height=280, showlegend=False,
                       yaxis=dict(categoryorder="total ascending"),
                       xaxis=dict(gridcolor="#f0f0f0"))
+    fig = grow_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 with u2:
@@ -505,6 +548,7 @@ with u2:
     fig.update_layout(**CHART_LAYOUT, height=280, showlegend=False,
                       yaxis=dict(categoryorder="total ascending"),
                       xaxis=dict(gridcolor="#f0f0f0"))
+    fig = grow_chart(fig)
     st.plotly_chart(fig, use_container_width=True)
 
 # ── Raw data explorer (optional / internal use) ───────────────────────────────
@@ -514,3 +558,31 @@ with st.expander("🗂 Data Explorer"):
         lambda r: r.astype(str).str.contains(search, case=False).any(), axis=1)]
     st.dataframe(disp, use_container_width=True, height=350)
     st.caption(f"{len(disp):,} of {len(df):,} rows")
+
+# ── Auto-trigger chart animations ─────────────────────────────────────────────
+_inject_js("""
+<script>
+(function () {
+    function playAll() {
+        try {
+            var plots = window.parent.document.querySelectorAll('.js-plotly-plot');
+            plots.forEach(function (plot) {
+                try {
+                    var frames = plot._transitionData && plot._transitionData._frames;
+                    if (frames && frames.length > 0) {
+                        window.parent.Plotly.animate(plot, ['loaded'], {
+                            transition: { duration: 790, easing: 'cubic-in-out' },
+                            frame:      { duration: 900, redraw: true },
+                            mode: 'afterall'
+                        });
+                    }
+                } catch (e) {}
+            });
+        } catch (e) {}
+    }
+    // First pass after charts have rendered, second pass as safety net
+    setTimeout(playAll, 700);
+    setTimeout(playAll, 1600);
+})();
+</script>
+""", height=0, scrolling=False)
