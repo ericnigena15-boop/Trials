@@ -77,6 +77,24 @@ st.markdown(f"""
   }}
   hr.div {{ border: none; border-top: 1px solid #e2e8f0; margin: 6px 0 14px; }}
 
+  /* ── Animated date stamp ── */
+  @keyframes datePulse {{
+    0%   {{ opacity: 0; transform: translateY(4px); }}
+    100% {{ opacity: 1; transform: translateY(0); }}
+  }}
+  @keyframes subtleBlink {{
+    0%, 100% {{ opacity: 1; }}
+    50%       {{ opacity: 0.45; }}
+  }}
+  .date-stamp {{
+    animation: datePulse 0.7s ease-out forwards;
+    display: inline-block;
+  }}
+  .date-stamp .clock {{
+    animation: subtleBlink 2.5s ease-in-out infinite;
+    display: inline-block;
+  }}
+
   /* ── Expander ── */
   [data-testid="stExpander"] {{
     background: white !important;
@@ -103,24 +121,23 @@ def onedrive_to_download_url(url: str) -> str:
 
 REFRESH_MINUTES = int(get_secret("REFRESH_MINUTES", 15))
 
+HERE = os.path.dirname(os.path.abspath(__file__))
+
 @st.cache_data(ttl=60 * REFRESH_MINUTES, show_spinner="Refreshing survey data…")
 def load_data() -> pd.DataFrame:
-    raw_url = get_secret("DATA_URL", "")
-    if not raw_url:
-        raise ValueError("DATA_URL is not set.")
-    url = onedrive_to_download_url(raw_url)
-
-    resp = requests.get(url, timeout=30)
-    resp.raise_for_status()
-
-    content_type = resp.headers.get("Content-Type", "")
-    if "spreadsheetml" in content_type or url.lower().endswith((".xlsx", ".xls")):
-        df = pd.read_excel(io.BytesIO(resp.content))
-    else:
-        df = pd.read_csv(io.StringIO(resp.text))
-
-    df["interview_date"] = pd.to_datetime(df["interview_date"], errors="coerce")
-    return df
+    local_rel = get_secret("DATA_LOCAL_PATH", "")
+    if local_rel:
+        # Resolve relative paths from the project root
+        local_path = local_rel if os.path.isabs(local_rel) else os.path.join(HERE, local_rel)
+        if os.path.exists(local_path):
+            df = pd.read_excel(local_path)
+            df["interview_date"] = pd.to_datetime(df["interview_date"], errors="coerce")
+            return df
+        raise FileNotFoundError(
+            f"Data file not found at: {local_path}\n"
+            "Place your Excel file at  data/lfs_survey_500.xlsx  inside the project folder."
+        )
+    raise ValueError("DATA_LOCAL_PATH is not set in your .env file.")
 
 # ── Sidebar (filters only — no data source shown) ─────────────────────────────
 with st.sidebar:
@@ -139,7 +156,11 @@ with st.sidebar:
     try:
         df_raw = load_data()
         last_refresh = datetime.now().strftime("%d %b %Y, %H:%M")
-        st.caption(f"Last loaded: {last_refresh}")
+        st.markdown(
+            f"<span class='date-stamp' style='font-size:0.78rem;color:{GREY}'>"
+            f"<span class='clock'>🕐</span> Last loaded: {last_refresh}</span>",
+            unsafe_allow_html=True,
+        )
     except Exception as e:
         st.error(f"Could not load data: {e}")
         st.info("Set DATA_URL in Streamlit Cloud Secrets (deployed) or in your local `.env` file.")
@@ -188,7 +209,7 @@ st.markdown(
     f"<h2 style='color:{DARK};margin-bottom:0'>Rwanda Labour Force Survey Dashboard</h2>"
     f"<p style='color:{GREY};margin-top:4px'>Survey year 2024 &nbsp;·&nbsp; "
     f"<b>{len(df):,}</b> respondents shown &nbsp;·&nbsp; "
-    f"Updated {datetime.now().strftime('%d %b %Y, %H:%M')}</p>",
+    f"<span class='date-stamp'><span class='clock'>🕐</span> Updated {datetime.now().strftime('%d %b %Y, %H:%M')}</span></p>",
     unsafe_allow_html=True,
 )
 st.markdown("<hr class='div'>", unsafe_allow_html=True)
