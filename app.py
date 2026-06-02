@@ -42,52 +42,77 @@ CHART_LAYOUT = dict(
 
 st.markdown(f"""
 <style>
-  /* ── Global background ── */
+  /* ── Keyframes ─────────────────────────────────────────────── */
+  @keyframes fadeSlideUp {{
+    from {{ opacity: 0; transform: translateY(30px) scale(0.97); }}
+    to   {{ opacity: 1; transform: translateY(0)    scale(1);    }}
+  }}
+  @keyframes fadeIn {{
+    from {{ opacity: 0; }}
+    to   {{ opacity: 1; }}
+  }}
+  @keyframes subtleBlink {{
+    0%, 100% {{ opacity: 1;    }}
+    50%      {{ opacity: 0.4;  }}
+  }}
+
+  /* ── Global background ─────────────────────────────────────── */
   body, .main, .block-container, [data-testid="stAppViewContainer"] {{
     background: {LIGHT_BG} !important;
   }}
   [data-testid="stSidebar"] {{ background: #ffffff !important; }}
 
-  /* ── KPI cards ── */
+  /* ── Page title ────────────────────────────────────────────── */
+  .dash-title {{
+    animation: fadeSlideUp 0.55s cubic-bezier(0.22,0.61,0.36,1) both;
+  }}
+
+  /* ── KPI cards ─────────────────────────────────────────────── */
   .card {{
     background: white; border-radius: 12px; padding: 18px 20px 14px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-top: 4px solid {BLUE};
+    animation: fadeSlideUp 0.6s cubic-bezier(0.22,0.61,0.36,1) both;
   }}
-  .card-green  {{ border-top-color: {GREEN}; }}
-  .card-yellow {{ border-top-color: {YELLOW}; }}
-  .card-red    {{ border-top-color: #e74c3c; }}
+  .card-green  {{ border-top-color: {GREEN};   }}
+  .card-yellow {{ border-top-color: {YELLOW};  }}
+  .card-red    {{ border-top-color: #e74c3c;   }}
   .kpi-val {{ font-size: 2.1rem; font-weight: 800; color: {DARK}; line-height: 1.1; }}
   .kpi-lbl {{ font-size: 0.78rem; color: {GREY}; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }}
   .kpi-sub {{ font-size: 0.78rem; color: {GREY}; margin-top: 3px; }}
 
-  /* ── Chart containers — same card style as KPIs ── */
+  /* ── Chart containers ──────────────────────────────────────── */
   [data-testid="stPlotlyChart"] {{
     background: white !important;
     border-radius: 12px !important;
     padding: 10px 12px 6px !important;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
     border-top: 4px solid {BLUE} !important;
+    animation: fadeSlideUp 0.7s cubic-bezier(0.22,0.61,0.36,1) both !important;
   }}
 
-  /* ── Section headers ── */
+  /* Stagger charts left → right within each row */
+  [data-testid="column"]:nth-child(1) [data-testid="stPlotlyChart"] {{ animation-delay: 0.08s  !important; }}
+  [data-testid="column"]:nth-child(2) [data-testid="stPlotlyChart"] {{ animation-delay: 0.22s  !important; }}
+  [data-testid="column"]:nth-child(3) [data-testid="stPlotlyChart"] {{ animation-delay: 0.36s  !important; }}
+  [data-testid="column"]:nth-child(4) [data-testid="stPlotlyChart"] {{ animation-delay: 0.50s  !important; }}
+  [data-testid="column"]:nth-child(5) [data-testid="stPlotlyChart"] {{ animation-delay: 0.64s  !important; }}
+
+  /* ── Section headers ───────────────────────────────────────── */
   .sec-hdr {{
     font-size: 0.9rem; font-weight: 700; color: {DARK};
     text-transform: uppercase; letter-spacing: .06em;
     border-left: 3px solid {BLUE}; padding-left: 8px; margin: 24px 0 10px;
+    animation: fadeSlideUp 0.5s cubic-bezier(0.22,0.61,0.36,1) both;
+    animation-delay: 0.05s;
   }}
+
+  /* ── Divider ───────────────────────────────────────────────── */
   hr.div {{ border: none; border-top: 1px solid #e2e8f0; margin: 6px 0 14px; }}
 
-  /* ── Animated date stamp ── */
-  @keyframes datePulse {{
-    0%   {{ opacity: 0; transform: translateY(4px); }}
-    100% {{ opacity: 1; transform: translateY(0); }}
-  }}
-  @keyframes subtleBlink {{
-    0%, 100% {{ opacity: 1; }}
-    50%       {{ opacity: 0.45; }}
-  }}
+  /* ── Date stamp ────────────────────────────────────────────── */
   .date-stamp {{
-    animation: datePulse 0.7s ease-out forwards;
+    animation: fadeSlideUp 0.7s cubic-bezier(0.22,0.61,0.36,1) both;
+    animation-delay: 0.3s;
     display: inline-block;
   }}
   .date-stamp .clock {{
@@ -95,12 +120,14 @@ st.markdown(f"""
     display: inline-block;
   }}
 
-  /* ── Expander ── */
+  /* ── Expander ──────────────────────────────────────────────── */
   [data-testid="stExpander"] {{
     background: white !important;
     border-radius: 12px !important;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
     border: none !important;
+    animation: fadeSlideUp 0.7s cubic-bezier(0.22,0.61,0.36,1) both;
+    animation-delay: 0.2s;
   }}
 </style>
 """, unsafe_allow_html=True)
@@ -206,10 +233,12 @@ if REFRESH_MINUTES > 0:
 
 # ── Page header ───────────────────────────────────────────────────────────────
 st.markdown(
+    f"<div class='dash-title'>"
     f"<h2 style='color:{DARK};margin-bottom:0'>Rwanda Labour Force Survey Dashboard</h2>"
     f"<p style='color:{GREY};margin-top:4px'>Survey year 2024 &nbsp;·&nbsp; "
     f"<b>{len(df):,}</b> respondents shown &nbsp;·&nbsp; "
-    f"<span class='date-stamp'><span class='clock'>🕐</span> Updated {datetime.now().strftime('%d %b %Y, %H:%M')}</span></p>",
+    f"<span class='date-stamp'><span class='clock'>🕐</span> Updated {datetime.now().strftime('%d %b %Y, %H:%M')}</span>"
+    f"</p></div>",
     unsafe_allow_html=True,
 )
 st.markdown("<hr class='div'>", unsafe_allow_html=True)
@@ -232,10 +261,11 @@ kpis = [
     ("card-green",  "Urban Respondents",  f"{urban_pct:.1f}%",   f"Rural: {100-urban_pct:.1f}%"),
 ]
 cols = st.columns(5)
-for col, (css, lbl, val, sub) in zip(cols, kpis):
+for i, (col, (css, lbl, val, sub)) in enumerate(zip(cols, kpis)):
     with col:
+        delay = 0.15 + i * 0.12
         st.markdown(f"""
-        <div class="card {css}">
+        <div class="card {css}" style="animation-delay:{delay}s">
           <div class="kpi-lbl">{lbl}</div>
           <div class="kpi-val">{val}</div>
           <div class="kpi-sub">{sub}</div>
